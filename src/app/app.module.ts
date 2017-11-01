@@ -6,6 +6,7 @@ import { HttpModule } from '@angular/http';
 import { AngularFireModule } from 'angularfire2';
 import { AngularFireDatabaseModule } from 'angularfire2/database';
 import { environment } from '../environments/environment';
+import { AlertModule } from 'ngx-bootstrap';
 
 import { BackendDbService } from 'app/services/backend-db.service';
 
@@ -29,7 +30,8 @@ import { AppRoutingModule } from 'app/routing/app-routing.module';
     AngularFireModule.initializeApp(environment.firebase),
     AngularFireDatabaseModule,
     AdminModule,
-    AppRoutingModule
+    AppRoutingModule,
+    AlertModule.forRoot()
   ],
   providers: [ BackendDbService ],
   bootstrap: [AppComponent]
