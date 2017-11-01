@@ -1,0 +1,75 @@
+<div class="container">
+  <h2>Add Story</h2>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <div>
+      <label for="author-input">Author:</label>
+      <input formControlName="author" placeholder="Example: NHOA" id="author-input" />
+    </div>
+    <fieldset formArrayName="locations">
+      <legend>Location:</legend>
+      <div *ngFor="let location of form.controls['locations'].controls; let i=index;">
+        <input formControlName="{{i}}" placeholder="Example: Vietnam" />
+        <button type="button" *ngIf="i > 0" (click)="onRemoveControl('locations', i)">Remove Location</button>
+      </div>
+      <button type="button" (click)="onAddControl('locations')">Add More Locations</button>
+    </fieldset>
+    <fieldset formArrayName="people">
+      <legend>People:</legend>
+      <div *ngFor="let person of form.controls['people'].controls; let i=index;">
+        <input formControlName="{{i}}" placeholder="Example: Sang" />
+        <button type="button" *ngIf="i > 0" (click)="onRemoveControl('people', i)">Remove Person</button>
+      </div>
+      <button type="button" (click)="onAddControl('people', true)">Add another person</button>
+    </fieldset>
+    <fieldset formArrayName="localImageUrls">
+      <legend>Images:</legend>
+      <div *ngFor="let image of form.controls['localImageUrls'].controls; let i=index;">
+        <input type="file" formControlName="{{i}}" accept="image/jpeg,image/png,image/jpg" title={{i}} />
+        <button type="button" *ngIf="i > 0" (click)="onRemoveControl('localImageUrls', i)">Remove Image</button>
+      </div>
+      <button type="button" (click)="onAddControl('localImageUrls', true)">Add another image</button>
+    </fieldset>
+    <div>
+      <label for="url-input">Url (Link):</label>
+      <input formControlName="sourceUrl" id="url-input" placeholder="Example: www.facebook.com/nhoa/1234" type="url" />
+    </div>
+    <fieldset formArrayName="paragraphs">
+      <legend>Story:</legend>
+      <div *ngFor="let paragraph of form.controls['paragraphs'].controls; let i=index;">
+        <textarea rows="10" style="width:100%;" formControlName="{{i}}" placeholder="Paragraph"></textarea>
+        <button type="button" *ngIf="i > 0" (click)="onRemoveControl('paragraphs', i)">Remove Paragraph</button>
+      </div>
+      <button type="button" (click)="onAddControl('paragraphs', true)">Add another Paragraph</button>
+    </fieldset>
+    <div>
+      <button type="submit" [disabled]="!isFormReady()">Save</button>
+    </div>
+  </form>
+</div>
+<div>
+  <main>
+    <h2>Preview:</h2>
+    <p>
+      <b>Author: </b>{{story.author}}</p>
+    <p>
+      <b>Locations: </b>{{story.locations.join(', ')}}</p>
+    <p>
+      <b>People: </b>{{story.people.join(', ')}}</p>
+    <p>
+      <b>Url: </b>
+      <a href="{{story.sourceUrl}}" target="blank">{{story.sourceUrl}}</a>
+    </p>
+    <div>
+      <b>Images:</b>
+      <div *ngFor="let imageFile of localImgSrcs">
+        <img [src]="imageFile?.src" style="max-width:300px;" />
+      </div>
+    </div>
+    <div>
+      <b>Story: </b>
+      <p *ngFor="let paragraph of story.paragraphs">
+        {{paragraph}}
+      </p>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,9 @@
+<div>{{ (user | async)?.uid }} </div>
+<div>{{loginStatusMsg}} | {{successResponse}}</div>
+<div>
+    <button *ngIf="isLogged() === false" (click)="login()">Login</button>
+    <button *ngIf="isLogged() === true" (click)="logout()">Logout</button>
+</div>
+<div>
+    <a *ngIf="isLogged() === true" [routerLink]="['/add-story-reactive']">Add a New Story</a>
+</div>

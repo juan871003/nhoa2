@@ -1,0 +1,32 @@
+<div *ngIf="!stories?.length > 0">Loading...</div>
+<div *ngFor="let story of stories">
+  <div>ID: {{story.id}}</div>
+  <div>Author: {{story.author}}</div>
+  <div>Date Created: {{story.dateCreated}}</div>
+  <div>
+    Related Locations:
+    <ul>
+      <li *ngFor="let location of story.locations">{{location}}</li>
+    </ul>
+  </div>
+  <div>
+    Related People:
+    <ul>
+      <li *ngFor="let person of story.people">{{person}}</li>
+    </ul>
+  </div>
+  <div>Last Modified: {{story.timespanModified}}</div>
+  <div>URL: <a href="{{story.sourceUrl}}">{{story.sourceUrl}}</a></div>
+  <div>
+    Images:
+    <ul>
+      <li *ngFor="let image of story.imageUrls">
+        <img src="{{image}}" style="max-width:200px;"/>
+      </li>
+    </ul>
+  </div>
+  <div>
+    Paragraphs:
+    <div *ngFor="let parag of story.paragraphs">{{parag}}</div>
+  </div>
+</div>

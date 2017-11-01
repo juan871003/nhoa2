@@ -1,0 +1,76 @@
+<div class="container">
+  <h2>Add Story</h2>
+  <form #addStoryForm="ngForm" (ngSubmit)="onSubmit(addStoryForm)">
+    <div>
+      <label for="author-input">Author:</label>
+      <input [(ngModel)]="story.author" id="author-input" placeholder="Example: NHOA" name="author" />
+    </div>
+    <fieldset ngModelGroup="locationsGroup">
+      <legend>Location:</legend>
+      <div *ngFor="let location of story.locations; let i = index; trackBy:trackByFn">
+        <input [(ngModel)]="story.locations[i]" placeholder="Example: Vietnam" name="location{{i}}" />
+      </div>
+      <button type="button" (click)="story?.locations.push('')">Add More Locations</button>
+      <button type="button" *ngIf="story?.locations.length > 1" (click)="story.locations.pop()">Remove last location</button>
+    </fieldset>
+    <fieldset ngModelGroup="peopleGroup">
+      <legend>People:</legend>
+      <div *ngFor="let person of story.people; let i = index; trackBy:trackByFn">
+        <input [(ngModel)]="story.people[i]" placeholder="Example: Sang" name="person{{i}}" />
+      </div>
+      <button type="button" (click)="story?.people.push('')">Add another person</button>
+      <button type="button" *ngIf="story?.people.length > 1" (click)="story.people.pop()">Remove last person</button>
+    </fieldset>
+    <fieldset ngModelGroup="imagesGroup">
+      <legend>Images:</legend>
+      <div *ngFor="let image of localImages; let i = index; trackBy:trackByFn">
+        <input type="file" name="image{{i}}" accept="image/*" (change)="readLocalPath($event, i)" />
+      </div>
+      <button type="button" (click)="localImages.push('')">Add another image</button>
+      <button type="button" *ngIf="localImages.length > 1" (click)="localImages.pop()">Remove Image</button>
+    </fieldset>
+    <div>
+      <label for="url-input">Url (Link):</label>
+      <input [(ngModel)]="story.sourceUrl" id="url-input" placeholder="Example: www.facebook.com/nhoa/1234" type="url" name="sourceUrl"
+      />
+    </div>
+    <fieldset ngModelGroup="paragraphsGroup">
+      <legend>Story:</legend>
+      <div *ngFor="let paragraph of story.paragraphs; let i = index; trackBy:trackByFn">
+        <textarea rows="10" style="width:100%;" [(ngModel)]="story.paragraphs[i]" placeholder="Paragraph" name="paragraph{{i}}"></textarea>
+      </div>
+      <button type="button" (click)="story?.paragraphs.push('')">Add another Paragraph</button>
+      <button type="button" *ngIf="story?.paragraphs.length > 1" (click)="story.paragraphs.pop()">Remove a Paragraph</button>
+    </fieldset>
+    <div>
+      <button type="submit" [disabled]="!addStoryForm.form.valid">Save</button>
+    </div>
+  </form>
+</div>
+<div>
+  <main>
+    <h2>Preview:</h2>
+    <p>
+      <b>Author: </b>{{story.author}}</p>
+    <p>
+      <b>Locations: </b>{{story.locations.join(', ')}}</p>
+    <p>
+      <b>People: </b>{{story.people.join(', ')}}</p>
+    <p>
+      <b>Url: </b>
+      <a href="{{story.url}}" target="blank">{{story.url}}</a>
+    </p>
+    <div>
+      <b>Images:</b>
+      <div *ngFor="let image of localImages; let i = index">
+        <img [src]="localImages[i]" style="max-width:300px;" />
+      </div>
+    </div>
+    <div>
+      <b>Story: </b>
+      <p *ngFor="let paragraph of story.paragraphs">
+        {{paragraph}}
+      </p>
+    </div>
+  </main>
+</div>
