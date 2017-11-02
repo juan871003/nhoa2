@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@angular/core';
-import { AngularFireDatabase, FirebaseListObservable } from 'angularfire2/database';
+import { AngularFireDatabase, AngularFireList } from 'angularfire2/database';
 import { FirebaseApp } from 'angularfire2';
 import * as firebase from 'firebase';
 import { Observable } from "rxjs/Observable";
@@ -29,15 +29,14 @@ export interface Response {
 @Injectable()
 export class BackendDbService {
   private loadedStories: Observable<Story[]>;
-  private storiesFOO: FirebaseListObservable<any>;
+  private angularFireList: AngularFireList<any>;
   private fStorage: firebase.storage.Storage;
-  
-  constructor( 
-    @Inject(FirebaseApp) firebaseApp: firebase.app.App, 
+
+  constructor(
+    @Inject(FirebaseApp) firebaseApp: firebase.app.App,
     private db: AngularFireDatabase) {
     this.fStorage = firebaseApp.storage();
     this.loadedStories = this._loadStories();
-    console.log('calling loading stories');
   }
 
   getStories(): Observable<Story[]> {
@@ -67,7 +66,7 @@ export class BackendDbService {
           task.on(
             firebase.storage.TaskEvent.STATE_CHANGED,
             (snapshot: firebase.storage.UploadTaskSnapshot) => {
-              let response : Response = {
+              let response: Response = {
                 message: '',
                 status: ResponseStatus.uploadingImage,
                 item: null
@@ -79,7 +78,7 @@ export class BackendDbService {
                   break;
                 case firebase.storage.TaskState.RUNNING:
                   response.status = ResponseStatus.uploadingImage;
-                  response.message = "image " + i + " uploading";  
+                  response.message = "image " + i + " uploading";
                   response.item = '' + (snapshot.bytesTransferred / snapshot.totalBytes * 100);
                   break;
                 case firebase.storage.TaskState.CANCELED:
@@ -110,12 +109,21 @@ export class BackendDbService {
   private _uploadStory(story: Story): Observable<Response> {
     story.timespanModified = Date.now();
     story.dateCreated = story.dateCreated.toString();
+
     story.id = 1; //modify this to get the latest ID
+    let observableId = this.db.list('/stories', ref => ref.orderByChild('id').limitToLast(1)).valueChanges().map((value: Story[]) => {
+      story.id = value[0].id++;
+      return {
+        message: 'story ID assigned',
+        status: ResponseStatus.uploadingStory,
+        item: story.id
+      } as Response;
+    });
 
     //fromPromise is a hot Observable, we need to convert it into a cold Observable
-    let observable1 = Observable.create((observer) => {
-      let observable2 = Observable.fromPromise(this.storiesFOO.push(story));
-      observable2.subscribe((tRef: firebase.database.ThenableReference) => {
+    let observableStory = Observable.create((observer) => {
+      let observableHot = Observable.fromPromise(this.db.list('/stories').push(story));
+      observableHot.subscribe((tRef: firebase.database.ThenableReference) => {
         observer.next({
           message: 'Story uploaded',
           status: ResponseStatus.uploaded,
@@ -133,13 +141,13 @@ export class BackendDbService {
       });
     }) as Observable<Response>;
 
-    return observable1;
+    return observableId.concat(observableStory);
   }
 
   private _loadStories(): Observable<Story[]> /* | Observable<Error> */ { //TODO: Find out what type is returned when an error occurs, and what to do about it
-    this.storiesFOO = this.db.list('/stories');
+    //TODO: change this 'subscribe' to 'map'
     return Observable.create((observer) => {
-      this.storiesFOO.subscribe({
+      this.db.list('/stories').valueChanges().subscribe({
         next: list => observer.next(loadStoriesF(list)),
         error: err => observer.error(err),
         complete: () => observer.complete()

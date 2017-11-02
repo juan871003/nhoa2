@@ -1,0 +1,65 @@
+.img-nav-brand {
+  max-height: 50px;
+}
+
+a.navbar-brand {
+  padding: 0;
+}
+
+ .title-container
+{
+  text-align:center;
+  background-image:url('/assets/images/cover_pic.jpg');
+  background-color:transparent;
+  background-size:cover;
+  background-position:50% 0;
+  background-repeat:no-repeat;
+  color:white;
+  padding-top:5em;
+  padding-bottom:8em;
+  margin-top:4.5em;
+  margin-bottom: 2em; 
+}
+
+.img-cover-pic
+{
+  visibility:hidden;
+  width:33%;
+}
+
+.logo-NHOA
+{
+  position:absolute;
+  width:179px;
+  margin-left:-8em;
+  top:0;
+  left:50%;
+  -webkit-border-radius:100%;
+  -moz-border-radius:100%;
+  border-radius:100%;
+  border:3px solid #fff;
+}
+
+@media only screen and (max-width: 1000px) {
+  .logo-NHOA
+  {
+      width: 152px;
+      top: 23px;
+      left: 52%;
+  }
+}
+
+@media only screen and (max-width: 620px)
+{
+  .logo-NHOA
+  {
+      width: 145px;
+      top: 23px;
+      left: 55%;
+  }
+
+  .img-cover-pic
+  {
+      width: 0%;
+  }
+}

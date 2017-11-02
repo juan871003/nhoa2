@@ -4,7 +4,7 @@ import { Location } from '@angular/common';
 
 import 'rxjs/add/operator/switchMap';
 
-import { AngularFireDatabase, FirebaseObjectObservable } from 'angularfire2/database';
+import { AngularFireDatabase, AngularFireObject } from 'angularfire2/database';
 
 import { Story } from "app/models/models";
 
@@ -14,7 +14,7 @@ import { Story } from "app/models/models";
   styleUrls: ['./storydetail.component.css']
 })
 export class StoryDetailComponent implements OnInit {
-  storyFOO: FirebaseObjectObservable<any>;
+  storyFOO: AngularFireObject<any>;
   story: Story;
 
   constructor(
@@ -26,7 +26,7 @@ export class StoryDetailComponent implements OnInit {
   ngOnInit(): void {
     this.story = new Story();
     this.route.params
-      .switchMap((params: Params) => this.db.object(params['id']))
+      .switchMap((params: Params) => this.db.object(params['id']).snapshotChanges())
       .subscribe(response => this.loadStory(response));
 
     //    this.storyFOO = this.db.object('/story/{id}');//TODO: check how to get ID from URL and how to pass ID to Firebase

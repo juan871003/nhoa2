@@ -1,9 +1,42 @@
-<h1>Title</h1>
+<!-- <div class="title-container">
+  <img class="logo-NHOA" src="/assets/images/logo_NHOA.jpg" />
+  <img src='/assets/images/cover_pic.jpg' class="img-cover-pic" />
+</div> -->
 
-<nav>
-  <a routerLink="/stories" routerLinkActive="active">All Stories</a>
-  <a routerLink="/login" routerLinkActive="active">Login</a>
-</nav>
-<div>
-  <router-outlet></router-outlet>
+<div class="container">
+  <nav class="navbar navbar-default navbar-static-top">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#mainNavBar"
+        [attr.aria-expanded]="!isCollapsed" (click)="toggleCollapse()" [ngClass]="{'collapsed': isCollapsed}">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" routerLink="/stories">
+          <img alt="NHOA" src="/assets/images/NHOA.ico" class="img-nav-brand">
+        </a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="mainNavBar" [ngClass]="{'in': !isCollapsed}">
+        <ul class="nav navbar-nav">
+          <li routerLinkActive="active">
+            <a routerLink="/stories">All Stories</a>
+          </li>
+          <li routerLinkActive="active">
+            <a routerLink="/login">Login</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+
+  <div>
+    <router-outlet></router-outlet>
+  </div>
 </div>
