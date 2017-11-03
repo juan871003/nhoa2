@@ -1,8 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { Location } from '@angular/common';
-import { Router } from '@angular/router';
-import { NgForm } from '@angular/forms';
-import { Observable } from "rxjs/Observable";
+import { Component } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 
 import { BackendDbService } from 'app/services/backend-db.service';
 import { Response } from 'app/services/backend-db.service';
@@ -15,83 +12,134 @@ import { Story } from "app/models/models";
   styleUrls: ['./addstory.component.css']
 })
 export class AddStoryComponent {
+  form: FormGroup;
   story: Story;
-  localImages: string[];
+  localImgSrcs: { file: File, src: string }[];
+  controlsReady: boolean;
 
   constructor(
-    private router: Router,
     private db: BackendDbService,
-    private location: Location) {
+    private fb: FormBuilder) {
     this.story = new Story();
-    this.story.locations.push('');
-    this.story.people.push('');
-    this.story.paragraphs.push('');
-    this.localImages = [''];
+    this.localImgSrcs = [];
+    this.createForm();
+    this.bindFormToStory();
+    this.controlsReady = true;
   }
 
-  goBack(): void {
-    this.location.back();
+  createForm() {
+    this.form = this.fb.group(this.initForm());
   }
 
-  onSubmit(form: NgForm) {
-    //perhaps we should be using a promise??
-    if (form.submitted && form.valid) {
+  initForm() {
+    return {
+      author: ['', Validators.required],
+      locations: this.fb.array([['']]),
+      people: this.fb.array([['', Validators.required]]),
+      localImageUrls: this.fb.array([['', Validators.required]]),
+      sourceUrl: [''],
+      paragraphs: this.fb.array([['', Validators.required]]),
+    };
+  }
+
+  bindFormToStory() {
+    this.form.get('author').valueChanges.subscribe((value: string) => {
+      this.story.author = value;
+    });
+
+    this.form.get('locations').valueChanges.subscribe((value: string[]) => {
+      this.story.locations = value;
+    });
+
+    this.form.get('people').valueChanges.subscribe((value: string[]) => {
+      this.story.people = value;
+    });
+
+    this.form.get('localImageUrls').valueChanges.subscribe((value: (Event | string)[]) => {
+      this.localImgSrcs = [];
+      for (let i = 0; i < value.length; i++) {
+        if (typeof value[i] !== 'string') {
+          let event = value[i] as Event;
+          let index = ~~(<HTMLInputElement>event.target).title; //I could not bind it to data-index, so I used title
+          this.readLocalPath(event, index);
+        }
+      }
+      //this.story.localImages is populated on submission, not here
+    });
+
+    this.form.get('sourceUrl').valueChanges.subscribe((value: string) => {
+      this.story.sourceUrl = value;
+    });
+
+    this.form.get('paragraphs').valueChanges.subscribe((value: string[]) => {
+      this.story.paragraphs = value;
+    });
+  }
+
+  readLocalPath(event1: any, index: number) {
+    const reader = new FileReader();
+    if (event1.target.files && event1.target.files[0]) {
+      reader.onload = (event2: any) => {
+        this.localImgSrcs[index] = {
+          file: fileBlb,
+          src: event2.target.result as string
+        }
+        this.controlsReady = true;
+      }
+      const fileBlb = event1.target.files[0] as File;
+      this.controlsReady = false;
+      reader.readAsDataURL(fileBlb); // this calls reader.onload
+    }
+  }
+
+  isFormReady(): boolean {
+    return (this.form.valid && this.controlsReady);
+  }
+
+  onAddControl(controlArrayName: string, required: boolean) {
+    (this.form.get(controlArrayName) as FormArray)
+      .push(this.fb.control('', required ? Validators.required : null));
+  }
+
+  onRemoveControl(controlArrayName: string, index: number) {
+    (this.form.get(controlArrayName) as FormArray)
+      .removeAt(index);
+  }
+
+  onSubmit() {
+    if (this.isFormReady()) {
       this.story.dateCreated = new Date();
-      console.log('declaration');
-      var observable = this.db.addStory(this.story);
-      console.log('before subscription');
-      observable.subscribe((response: Response) => {
-        console.log('response message: ' + response.message);
-        switch(response.status) {
+      for (let i = 0; i < this.localImgSrcs.length; i++) {
+        if (this.localImgSrcs[i].file) {
+          this.story.localImages.push(this.localImgSrcs[i].file);
+        }
+      }
+      this.db.addStory(this.story).subscribe((response: Response) => {
+        switch (response.status) {
           case ResponseStatus.uploadingImage:
-            console.log('bytes transferred: ' + response.item);
-          break;
-          case ResponseStatus.uploaded:
-            console.log('story key: ' + response.item);
+            //TODO: show bytes transferred to user
             break;
+          case ResponseStatus.uploadingPaused:
+            //TODO: show uploading paused message
+            break;
+          case ResponseStatus.uploaded:
+            console.log('uploaded. story key: ' + response.item);
+            break;
+          case ResponseStatus.uploadingImage:
+            //TODO: show resonse.message
           default:
-            console.log('status = ' + response.status);
+            console.log(' unknown status, message: ' + response.message);
         }
       },
         (error: Response) => {
           console.log('Response error: ' + error);
+          //TODO: Show error to user
         },
-      () => {
-        console.log('complete, story= ' + this.story.imageUrls.toString());
-      });
-      // this.db.addStory(this.story).subscribe({
-      //   next: result => {
-      //     /* if(result.status === "success") {
-      //       //this.router.navigateByUrl('/stories');
-      //       console.log(result.message);
-      //     } else {
-      //       console.log("from add story, result is: " + result);
-      //     } */
-      //     result.message ? console.log(result.message) : null;
-      //   },
-      //   error: result => {
-      //     result.message ? console.log(result.message) : console.log(result);
-      //   },
-      //   complete: () => {
-      //     console.log("uploading story completed!");
-      //   }
-      // }).unsubscribe();
-    }
-    console.log('after subscription');
-  }
-
-  trackByFn(index: any, item: any) {
-    return index;
-  }
-
-  readLocalPath(event1: any, index: number) {
-    var reader = new FileReader();
-    if (event1.target.files && event1.target.files[0]) {
-      reader.onload = (event2: any) => {
-        this.localImages[index] = event2.target.result;
-      }
-      reader.readAsDataURL(event1.target.files[0]);
-      this.story.localImages[index] = event1.target.files[0];
+        () => {
+          this.form = this.fb.group(this.initForm());
+          //TODO: got to all-stories
+        }
+      );
     }
   }
 }

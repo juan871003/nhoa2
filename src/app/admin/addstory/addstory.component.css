@@ -1,0 +1,17 @@
+.add-story-form .btn-block {
+  margin-top: 10px;
+}
+
+.add-story-form .form-group {
+  padding-bottom: 5px;
+}
+
+.addstory-form-container {
+  padding-bottom: 10px;
+}
+
+@media screen and (min-width: 992px) {
+  .addstory-form-container {
+    border-right: 1px solid #ddd;
+  }
+}

@@ -1,53 +1,116 @@
-<div class="container">
-  <h2>Add Story</h2>
-  <form #addStoryForm="ngForm" (ngSubmit)="onSubmit(addStoryForm)">
+<div class="col-md-5 addstory-form-container">
+  <h2>Add Story:</h2>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="add-story-form">
+    
+    <fieldset class="form-group row">
+      <label class="col-md-12" for="author-input">Author:</label>
+      <div class="col-md-12">
+        <div class="col-xs-10">
+          <input formControlName="author" placeholder="Example: NHOA" id="author-input" class="form-control" />
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-group row" formArrayName="locations">
+      <label class="col-md-12" for="location-input-{{form.controls['locations'].controls.length - 1}}">Location:</label>
+      <div class="col-md-12" *ngFor="let location of form.controls['locations'].controls; let i=index;">
+        <div class="col-xs-10">
+          <input formControlName="{{i}}" placeholder="Example: Vietnam" id="location-input-{{i}}" class="form-control"
+          />
+        </div>
+        <div class="col-xs-2">
+          <button class="btn btn-default" type="button" *ngIf="i > 0" (click)="onRemoveControl('locations', i)">
+            <i class="fa fa-trash-o" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="col-xs-10">
+          <button class="btn btn-default btn-block" type="button" (click)="onAddControl('locations')">Add More Locations</button>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-group row" formArrayName="people">
+      <label class="col-md-12" for="people-input-{{form.controls['people'].controls.length - 1}}">People:</label>
+      <div class="col-md-12" *ngFor="let person of form.controls['people'].controls; let i=index;">
+        <div class="col-xs-10">
+          <input formControlName="{{i}}" placeholder="Example: Sang" id="people-input-{{i}}" class="form-control" />
+        </div>
+        <div class="col-xs-2">
+          <button class="btn btn-default" type="button" *ngIf="i > 0" (click)="onRemoveControl('people', i)">
+            <i class="fa fa-trash-o" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="col-xs-10">
+          <button class="btn btn-default btn-block" type="button" (click)="onAddControl('people', true)">Add another person</button>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-group row" formArrayName="localImageUrls">
+      <label class="col-md-12" for="images-input-{{form.controls['localImageUrls'].controls.length - 1}}">Images:</label>
+      <div class="col-md-12" *ngFor="let image of form.controls['localImageUrls'].controls; let i=index;">
+        <div class="col-xs-10">
+          <input type="file" formControlName="{{i}}" accept="image/jpeg,image/png,image/jpg" title={{i}} id="images-input-{{i}}" class="form-control"
+          />
+        </div>
+        <div class="col-xs-2">
+          <button class="btn btn-default" type="button" *ngIf="i > 0" (click)="onRemoveControl('localImageUrls', i)">
+            <i class="fa fa-trash-o" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="col-xs-12">
+          <span id="helpBlock" class="help-block">Acceptable images are jpeg, jpg, and png</span>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="col-xs-10">
+          <button class="btn btn-default btn-block" type="button" (click)="onAddControl('localImageUrls', true)">Add another image</button>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-group row">
+      <label class="col-md-12" for="url-input">Url (Link):</label>
+      <div class="col-md-12">
+        <div class="col-xs-10">
+          <input formControlName="sourceUrl" id="url-input" placeholder="Example: www.facebook.com/nhoa/1234" type="url" class="form-control"
+          />
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="form-group row" formArrayName="paragraphs">
+      <label class="col-md-12" for="paragraphs-input-{{form.controls['paragraphs'].controls.length - 1}}">Story:</label>
+      <div class="col-md-12" *ngFor="let paragraph of form.controls['paragraphs'].controls; let i=index;">
+        <div class="col-xs-10">
+          <textarea rows="5" formControlName="{{i}}" placeholder="Paragraph" id="paragraphs-input-{{i}}" class="form-control"></textarea>
+        </div>
+        <div class="col-xs-2">
+          <button class="btn btn-default" type="button" *ngIf="i > 0" (click)="onRemoveControl('paragraphs', i)">
+            <i class="fa fa-trash-o" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="col-md-12">
+        <div class="col-xs-10">
+          <button class="btn btn-default btn-block" type="button" (click)="onAddControl('paragraphs', true)">Add another Paragraph</button>
+        </div>
+      </div>
+    </fieldset>
+
     <div>
-      <label for="author-input">Author:</label>
-      <input [(ngModel)]="story.author" id="author-input" placeholder="Example: NHOA" name="author" />
+      <button class="btn btn-primary btn-block" type="submit" [disabled]="!isFormReady()">Save</button>
     </div>
-    <fieldset ngModelGroup="locationsGroup">
-      <legend>Location:</legend>
-      <div *ngFor="let location of story.locations; let i = index; trackBy:trackByFn">
-        <input [(ngModel)]="story.locations[i]" placeholder="Example: Vietnam" name="location{{i}}" />
-      </div>
-      <button type="button" (click)="story?.locations.push('')">Add More Locations</button>
-      <button type="button" *ngIf="story?.locations.length > 1" (click)="story.locations.pop()">Remove last location</button>
-    </fieldset>
-    <fieldset ngModelGroup="peopleGroup">
-      <legend>People:</legend>
-      <div *ngFor="let person of story.people; let i = index; trackBy:trackByFn">
-        <input [(ngModel)]="story.people[i]" placeholder="Example: Sang" name="person{{i}}" />
-      </div>
-      <button type="button" (click)="story?.people.push('')">Add another person</button>
-      <button type="button" *ngIf="story?.people.length > 1" (click)="story.people.pop()">Remove last person</button>
-    </fieldset>
-    <fieldset ngModelGroup="imagesGroup">
-      <legend>Images:</legend>
-      <div *ngFor="let image of localImages; let i = index; trackBy:trackByFn">
-        <input type="file" name="image{{i}}" accept="image/*" (change)="readLocalPath($event, i)" />
-      </div>
-      <button type="button" (click)="localImages.push('')">Add another image</button>
-      <button type="button" *ngIf="localImages.length > 1" (click)="localImages.pop()">Remove Image</button>
-    </fieldset>
-    <div>
-      <label for="url-input">Url (Link):</label>
-      <input [(ngModel)]="story.sourceUrl" id="url-input" placeholder="Example: www.facebook.com/nhoa/1234" type="url" name="sourceUrl"
-      />
-    </div>
-    <fieldset ngModelGroup="paragraphsGroup">
-      <legend>Story:</legend>
-      <div *ngFor="let paragraph of story.paragraphs; let i = index; trackBy:trackByFn">
-        <textarea rows="10" style="width:100%;" [(ngModel)]="story.paragraphs[i]" placeholder="Paragraph" name="paragraph{{i}}"></textarea>
-      </div>
-      <button type="button" (click)="story?.paragraphs.push('')">Add another Paragraph</button>
-      <button type="button" *ngIf="story?.paragraphs.length > 1" (click)="story.paragraphs.pop()">Remove a Paragraph</button>
-    </fieldset>
-    <div>
-      <button type="submit" [disabled]="!addStoryForm.form.valid">Save</button>
-    </div>
+
   </form>
 </div>
-<div>
+<div class="col-md-7">
   <main>
     <h2>Preview:</h2>
     <p>
@@ -58,12 +121,12 @@
       <b>People: </b>{{story.people.join(', ')}}</p>
     <p>
       <b>Url: </b>
-      <a href="{{story.url}}" target="blank">{{story.url}}</a>
+      <a href="{{story.sourceUrl}}" target="blank">{{story.sourceUrl}}</a>
     </p>
     <div>
       <b>Images:</b>
-      <div *ngFor="let image of localImages; let i = index">
-        <img [src]="localImages[i]" style="max-width:300px;" />
+      <div *ngFor="let imageFile of localImgSrcs">
+        <img [src]="imageFile?.src" style="max-width:300px;" />
       </div>
     </div>
     <div>

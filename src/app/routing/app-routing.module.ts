@@ -5,7 +5,6 @@ import { StoryDetailComponent } from 'app/storydetail/storydetail.component';
 import { LoginComponent } from 'app/admin/login/login.component';
 //import { EditStoryComponent } from 'app/admin/editstory/editstory.component';
 import { AddStoryComponent } from 'app/admin/addstory/addstory.component';
-import { AddStoryReactiveComponent } from 'app/admin/addstory/addstory.reactive.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/stories', pathMatch: 'full' },
@@ -13,7 +12,7 @@ const routes: Routes = [
   { path: 'story/:id', component: StoryDetailComponent },
   { path: 'login', component: LoginComponent },
   //{ path: 'edit-story/:id', component: EditStoryComponent },
-  { path: 'add-story-reactive', component: AddStoryReactiveComponent }
+  { path: 'add-story-reactive', component: AddStoryComponent }
 ];
 
 @NgModule({

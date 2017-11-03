@@ -7,6 +7,8 @@ import { Observable } from "rxjs/Observable";
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/concat';
+import 'rxjs/add/operator/concatAll';
+import 'rxjs/add/operator/take';
 
 import { Story } from "app/models/models";
 
@@ -44,11 +46,30 @@ export class BackendDbService {
   }
 
   addStory(story: Story): Observable<Response> {
-    return this._uploadImages(story).concat(this._uploadStory(story));
+    let obs = Observable.of(
+      this._setStoryId(story), 
+      this._uploadImages(story),
+      this._uploadStory(story));
+    return obs.concatAll();
   }
 
   private _cancelTransaction(story: Story): void {
     //TODO: cancel the upload of any data related to this story
+  }
+
+  private _setStoryId(story: Story): Observable<Response> {
+    story.id = 0;
+    let observableId = this.db.list('/stories', ref => ref.orderByChild('id').limitToLast(1)).valueChanges().take(1).map((value: Story[]) => {
+      if(value.length > 0 && value[0].id)
+        story.id = value[0].id + 1;
+      return {
+        message: 'story ID assigned',
+        status: ResponseStatus.uploadingStory,
+        item: story.id
+      } as Response;
+    });
+
+    return observableId;
   }
 
   private _uploadImages(story: Story): Observable<Response> {
@@ -108,17 +129,7 @@ export class BackendDbService {
 
   private _uploadStory(story: Story): Observable<Response> {
     story.timespanModified = Date.now();
-    story.dateCreated = story.dateCreated.toString();
-
-    story.id = 1; //modify this to get the latest ID
-    let observableId = this.db.list('/stories', ref => ref.orderByChild('id').limitToLast(1)).valueChanges().map((value: Story[]) => {
-      story.id = value[0].id++;
-      return {
-        message: 'story ID assigned',
-        status: ResponseStatus.uploadingStory,
-        item: story.id
-      } as Response;
-    });
+    story.dateCreated = story.dateCreated.toString();    
 
     //fromPromise is a hot Observable, we need to convert it into a cold Observable
     let observableStory = Observable.create((observer) => {
@@ -141,7 +152,7 @@ export class BackendDbService {
       });
     }) as Observable<Response>;
 
-    return observableId.concat(observableStory);
+    return observableStory;
   }
 
   private _loadStories(): Observable<Story[]> /* | Observable<Error> */ { //TODO: Find out what type is returned when an error occurs, and what to do about it
