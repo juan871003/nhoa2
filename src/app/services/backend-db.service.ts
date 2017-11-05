@@ -33,11 +33,13 @@ export class BackendDbService {
   private loadedStories: Observable<Story[]>;
   private angularFireList: AngularFireList<any>;
   private fStorage: firebase.storage.Storage;
+  private fDb: firebase.database.Database;
 
   constructor(
     @Inject(FirebaseApp) firebaseApp: firebase.app.App,
     private db: AngularFireDatabase) {
     this.fStorage = firebaseApp.storage();
+    this.fDb = firebaseApp.database();
     this.loadedStories = this._loadStories();
   }
 
@@ -47,7 +49,7 @@ export class BackendDbService {
 
   addStory(story: Story): Observable<Response> {
     let obs = Observable.of(
-      this._setStoryId(story), 
+      this._setStoryId(story),
       this._uploadImages(story),
       this._uploadStory(story));
     return obs.concatAll();
@@ -58,31 +60,37 @@ export class BackendDbService {
   }
 
   private _setStoryId(story: Story): Observable<Response> {
-    story.id = 0;
-    let observableId = this.db.list('/stories', ref => ref.orderByChild('id').limitToLast(1)).valueChanges().take(1).map((value: Story[]) => {
-      if(value.length > 0 && value[0].id)
-        story.id = value[0].id + 1;
-      return {
-        message: 'story ID assigned',
-        status: ResponseStatus.uploadingStory,
-        item: story.id
-      } as Response;
+    return Observable.create((observer) => {
+      story.id = -1;
+      let idRef = this.fDb.ref('/stats/lastId');
+      idRef.transaction((lastId) => {
+        story.id = lastId + 1;
+        return lastId + 1;
+      }).then((value) => {
+        observer.next({
+          message: 'story ID assigned',
+          status: ResponseStatus.uploadingStory,
+          item: story.id
+        } as Response);
+        observer.complete();
+      }).catch((error) => {
+        observer.error({
+          message: "error getting new id",
+          status: ResponseStatus.error,
+          item: error
+        } as Response);
+      });
     });
-
-    return observableId;
   }
 
   private _uploadImages(story: Story): Observable<Response> {
     const fbRef = this.fStorage.ref();
-    const imageName = story.people.toString().replace(/[^a-z0-9]/gi, '_').toLowerCase();
-
+    
     let uploadTasks: Observable<Response>[] = [];
-    console.log('upload images');
     for (let i = 0; i < story.localImages.length; i++) {
-      let fbChild = fbRef.child(imageName + '_' + i);
       uploadTasks.push(
         Observable.create((observer) => {
-          console.log('adding photos');
+          let fbChild = fbRef.child("storyId_" + story.id + "_image_" + i);
           let task = fbChild.put(story.localImages[i])
           task.on(
             firebase.storage.TaskEvent.STATE_CHANGED,
@@ -129,7 +137,7 @@ export class BackendDbService {
 
   private _uploadStory(story: Story): Observable<Response> {
     story.timespanModified = Date.now();
-    story.dateCreated = story.dateCreated.toString();    
+    story.dateCreated = story.dateCreated.toString();
 
     //fromPromise is a hot Observable, we need to convert it into a cold Observable
     let observableStory = Observable.create((observer) => {
@@ -156,14 +164,7 @@ export class BackendDbService {
   }
 
   private _loadStories(): Observable<Story[]> /* | Observable<Error> */ { //TODO: Find out what type is returned when an error occurs, and what to do about it
-    //TODO: change this 'subscribe' to 'map'
-    return Observable.create((observer) => {
-      this.db.list('/stories').valueChanges().subscribe({
-        next: list => observer.next(loadStoriesF(list)),
-        error: err => observer.error(err),
-        complete: () => observer.complete()
-      });
-    });
+    return this.db.list('/stories').valueChanges().map(list => loadStoriesF(list));
 
     function loadStoriesF(storiesArray): Story[] {
       const stories: Story[] = [];
